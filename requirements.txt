@@ -1,0 +1,39 @@
+
+# general dependencies
+pydantic==2.11.3
+transformers
+datasets
+vllm
+qwen-vl-utils
+mistral-common
+wandb==0.21.0
+
+# data generation dependencies
+faiss-gpu-cu12==1.11.0
+sentence-transformers==5.1.0
+imagehash==4.3.2
+openai==1.76.0
+openai-harmony
+
+# training dependencies
+trl
+accelerate
+evaluate
+torchvision
+peft
+bitsandbytes
+hf_xet
+deepspeed
+num2words
+
+# evaluation dependencies
+git+https://github.com/EvolvingLMMs-Lab/lmms-eval.git
+ipdb
+jieba
+distance
+editdistance
+Levenshtein
+apted
+Polygon3
+num2words
+wandb==0.18

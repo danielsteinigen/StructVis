@@ -1,0 +1,100 @@
+[project]
+name = "structvis"
+version = "0.1.0"
+description = "Framework for generating and interpreting Structured **Visualizations through Formal Representation Languages for Multi-Domain Vision-Language Understanding."
+keywords = ["structure", "visualization", "formal language", "code2image", "image", "diagram", "rendering", "dataset", "vision-language", "reasoning"]
+readme = "README.md"
+license = { file = "LICENSE" }
+authors = [
+    { name = "Daniel Steinigen", email = "contact@steinigen.me" }
+]
+requires-python = ">=3.12"
+
+[project.urls]
+Homepage = "https://github.com/danielsteinigen/structvis"
+Documentation = "https://github.com/danielsteinigen/structvis#readme"
+Issues = "https://github.com/danielsteinigen/structvis/issues"
+
+
+dependencies = [
+    "pydantic==2.11.3",
+    "transformers",
+    "datasets",
+    "vllm",
+    "qwen-vl-utils",
+    "mistral-common",
+    "wandb==0.21.0",
+]
+
+[project.optional-dependencies]
+datagen = [
+    "faiss-gpu-cu12==1.11.0",
+    "sentence-transformers==5.1.0",
+    "imagehash==4.3.2",
+    "openai==1.76.0",
+    "openai-harmony",
+]
+train = [
+    "trl",
+    "accelerate",
+    "evaluate",
+    "torchvision",
+    "peft",
+    "bitsandbytes",
+    "hf_xet",
+    "deepspeed",
+    "num2words",
+]
+eval = [
+    "lmms-eval @ git+https://github.com/EvolvingLMMs-Lab/lmms-eval.git",
+    "ipdb",
+    "jieba",
+    "distance",
+    "editdistance",
+    "Levenshtein",
+    "apted",
+    "Polygon3",
+    "num2words",
+]
+all = [
+    "faiss-gpu-cu12==1.11.0",
+    "sentence-transformers==5.1.0",
+    "imagehash==4.3.2",
+    "openai==1.76.0",
+    "openai-harmony",
+    "trl",
+    "accelerate",
+    "evaluate",
+    "torchvision",
+    "peft",
+    "bitsandbytes",
+    "hf_xet",
+    "deepspeed",
+    "num2words",
+    "lmms-eval @ git+https://github.com/EvolvingLMMs-Lab/lmms-eval.git",
+    "ipdb",
+    "jieba",
+    "distance",
+    "editdistance",
+    "Levenshtein",
+    "apted",
+    "Polygon3",
+]
+
+[build-system]
+requires = ["uv_build>=0.8.2,<0.9.0"]
+build-backend = "uv_build"
+
+[tool.black]
+line-length = 140
+target-version = ["py312"]
+extend-exclude = '''
+(
+  ^\.venv
+)
+'''
+
+[tool.isort]
+profile = "black"
+line_length = 140
+skip = [".venv"]
