@@ -15,6 +15,9 @@ Homepage = "https://github.com/danielsteinigen/structvis"
 Documentation = "https://github.com/danielsteinigen/structvis#readme"
 Issues = "https://github.com/danielsteinigen/structvis/issues"
 
+[project.scripts]
+structvis = "structvis.cli:main"
+
 
 dependencies = [
     "pydantic==2.11.3",

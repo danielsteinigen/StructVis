@@ -3,9 +3,10 @@ import json
 import re
 
 from datasets import Dataset, load_dataset
-from src.data_generator.data_generator import DataGenerator
-from src.prompt_templates.templates_personas import PERSONA_QUERY_PROMPT, PERSONA_QUERY_SYSTEM
-from src.util import check_reasoning, load_json, save_json
+
+from structvis.data_generator.data_generator import DataGenerator
+from structvis.prompt_templates.templates_personas import PERSONA_QUERY_PROMPT, PERSONA_QUERY_SYSTEM
+from structvis.util import check_reasoning, load_json, save_json
 
 
 class PersonaQueryDataGenerator(DataGenerator):
@@ -56,6 +57,7 @@ class PersonaQueryDataGenerator(DataGenerator):
 def main():
     parser = argparse.ArgumentParser(description="Run persona extraction with vLLM.")
     parser.add_argument("--config", required=True, help="Path to YAML config file")
+    parser.add_argument("--input", required=True, help="Path to the categories JSON input file")
     parser.add_argument("--output", required=True, help="Path to output JSONL file")
     parser.add_argument("--max-samples", type=int, default=None, help="Max samples to process")
     parser.add_argument("--data-batch-size", type=int, default=1000, help="Batch size per LLM call")
@@ -65,7 +67,7 @@ def main():
     generator = PersonaQueryDataGenerator(
         model_config=args.config,
         output_path=args.output,
-        input_path="data/categories_all.json",
+        input_path=args.input,
         max_samples=args.max_samples,
         data_batch_size=args.data_batch_size,
     )

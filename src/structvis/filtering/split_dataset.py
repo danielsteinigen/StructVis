@@ -1,3 +1,4 @@
+import argparse
 import json
 import os
 import random
@@ -6,11 +7,11 @@ from collections import Counter
 from datasets import Dataset, concatenate_datasets, load_dataset
 from rdkit import Chem
 from rdkit.Chem import rdMolDescriptors
-from src.util import load_json, save_json
+
+from structvis.util import load_json, save_json
 
 random.seed(42)
 save_filepath = f"/data/dataset_v10/dataset_assembled"
-os.makedirs(f"{save_filepath}", exist_ok=True)
 
 
 def save_stats(ds, path):
@@ -181,10 +182,22 @@ def create_statistics_rdkit(sample):
         return {"statistics": json.dumps({"node_types": renamed_counts}, ensure_ascii=False)}
 
 
-if __name__ == "__main__":
-    categories = load_json(filename="data/categories_all.json")
-    save_dirs_qa = []
-    save_dirs_ps = []
+def main():
+    global save_filepath
+
+    parser = argparse.ArgumentParser(description="Split filtered datasets into refinement subsets.")
+    parser.add_argument("--qa-input-dirs", nargs="+", required=True, help="Directories containing QA-scored datasets")
+    parser.add_argument("--ps-input-dirs", nargs="+", required=True, help="Directories containing PS-scored datasets")
+    parser.add_argument("--output-dir", required=True, help="Directory where split datasets are written")
+    parser.add_argument("--categories", default="diagram_categories.json", help="Path to category definitions JSON")
+    args = parser.parse_args()
+
+    save_filepath = args.output_dir
+    os.makedirs(save_filepath, exist_ok=True)
+
+    categories = load_json(filename=args.categories)
+    save_dirs_qa = args.qa_input_dirs
+    save_dirs_ps = args.ps_input_dirs
     ds_qa = load_dataset("json", data_files=[f"{save_dir}/dataset_score_final.jsonl" for save_dir in save_dirs_qa])["train"].shuffle(
         seed=42
     )
@@ -249,3 +262,7 @@ if __name__ == "__main__":
     save_stats(ds_llm_gen, f"{save_filepath}/statistics_llm_qa_gen.json")
     save_stats(ds_structu, f"{save_filepath}/statistics_structural.json")
     save_stats(ds_transla, f"{save_filepath}/statistics_code_translate.json")
+
+
+if __name__ == "__main__":
+    main()

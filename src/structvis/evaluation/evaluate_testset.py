@@ -3,8 +3,9 @@ from collections import defaultdict
 from statistics import mean
 
 from datasets import load_dataset
-from src.util import check_reasoning, check_reasoning_code, extract_part, save_json
 from vllm import LLM, SamplingParams
+
+from structvis.util import check_reasoning, check_reasoning_code, extract_part, save_json
 
 TEMPERATURE = 0.2
 TOP_P = 0.95

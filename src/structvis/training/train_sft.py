@@ -1,3 +1,4 @@
+import argparse
 import random
 
 import torch
@@ -5,7 +6,6 @@ import wandb
 from datasets import Image, load_dataset
 from peft import LoraConfig, PeftModel, get_peft_model
 from qwen_vl_utils import process_vision_info
-from src.util import replace_bpmndi
 from transformers import (
     AutoConfig,
     AutoModelForImageTextToText,
@@ -17,6 +17,8 @@ from transformers import (
     Qwen2_5_VLProcessor,
 )
 from trl import SFTConfig, SFTTrainer
+
+from structvis.util import replace_bpmndi
 
 random.seed(42)
 
@@ -71,27 +73,20 @@ reason_hints = [
     "Reason with the code representation of the image to produce the correct answer.",
 ]
 
-wandb.init(
-    project="compimg-train",
-    name=output_dir.split("/")[-1],
-    config={
-        "model": output_dir.split("/")[-1],
-        # "approach": "test-lora"
-    },
-    # settings=wandb.Settings(silent=True)
-)
-
 
 def format_data(sample):
     image = sample["image_augment"]
-    # if image.mode != 'RGB':
-    #     image = image.convert('RGB')
     sys_msg = system_message_general[random.randint(0, 4)] if random.randint(0, 3) != 0 else system_message[sample["type"]]
     msg_assistent = sample["assistant"]
     if USE_THINK_TAGS:
-        sys_msg += f" {reason_hints[random.randint(0, 3)]} {THINK_TAGS["think_enable"]}"
+        sys_msg += f" {reason_hints[random.randint(0, 3)]} {THINK_TAGS['think_enable']}"
         code = sample["code"] if sample["lang_key"] != "bpmn" else replace_bpmndi(sample["code"])
-        msg_assistent = f'{THINK_TAGS["think_start"]}\n{THINK_TAGS["lang_start"]}{sample["lang_name"]}{THINK_TAGS["lang_end"]}\n{THINK_TAGS["code_start"]}\n{code}\n{THINK_TAGS["code_end"]}\n{THINK_TAGS["think_end"]}\n{msg_assistent}'
+        msg_assistent = (
+            f'{THINK_TAGS["think_start"]}\n'
+            f'{THINK_TAGS["lang_start"]}{sample["lang_name"]}{THINK_TAGS["lang_end"]}\n'
+            f'{THINK_TAGS["code_start"]}\n{code}\n{THINK_TAGS["code_end"]}\n'
+            f'{THINK_TAGS["think_end"]}\n{msg_assistent}'
+        )
     return {
         "images": [image],
         "messages": [
@@ -104,7 +99,7 @@ def format_data(sample):
                 "content": [
                     {
                         "type": "image",
-                        "image": image,  # can be removed since not considered by the chat templates (Qwen, SmolVLM)
+                        "image": image,
                     },
                     {
                         "type": "text",
@@ -122,17 +117,13 @@ def format_data(sample):
 
 def process_vision_info_gemma(messages: list[dict]):
     image_inputs = []
-    # Iterate through each conversation
     for msg in messages:
-        # Get content (ensure it's a list)
         content = msg.get("content", [])
         if not isinstance(content, list):
             content = [content]
 
-        # Check each content element for images
         for element in content:
             if isinstance(element, dict) and ("image" in element or element.get("type") == "image"):
-                # Get the image and convert to RGB
                 if "image" in element:
                     image = element["image"]
                 else:
@@ -142,6 +133,48 @@ def process_vision_info_gemma(messages: list[dict]):
 
 
 def main():
+    global model_id, output_dir, dataset_id, number_samples_test, MODEL_TYPE, USE_THINK_TAGS, LEARNING_RATE
+    global BATCH_SIZE, ACCU_STEPS, EPOCHS, FREEZE_VISION, CUSTOM_COLLATE_FN, USE_LORA, ADD_SPECIAL_TOKENS
+
+    parser = argparse.ArgumentParser(description="Fine-tune a VLM on the StructVis assembled dataset.")
+    parser.add_argument("--model-id", default=model_id, help="Base Hugging Face model identifier or local path")
+    parser.add_argument("--output-dir", default=output_dir, help="Directory where checkpoints are written")
+    parser.add_argument("--dataset-id", default=dataset_id, help="Dataset identifier or local dataset path")
+    parser.add_argument("--number-samples-test", type=int, default=number_samples_test, help="Number of evaluation samples to use")
+    parser.add_argument(
+        "--model-type", default=MODEL_TYPE, choices=["SMOLVLM", "QWEN25", "MISTRAL", "GEMMA"], help="Model family configuration"
+    )
+    parser.add_argument("--learning-rate", type=float, default=LEARNING_RATE, help="Training learning rate")
+    parser.add_argument("--batch-size", type=int, default=BATCH_SIZE, help="Per-device training batch size")
+    parser.add_argument("--accu-steps", type=int, default=ACCU_STEPS, help="Gradient accumulation steps")
+    parser.add_argument("--epochs", type=int, default=EPOCHS, help="Number of training epochs")
+    parser.add_argument("--disable-think-tags", action="store_true", help="Disable think-tag augmentation")
+    parser.add_argument("--disable-freeze-vision", action="store_true", help="Fine-tune the vision tower as well")
+    parser.add_argument("--disable-custom-collate", action="store_true", help="Disable the custom collator")
+    parser.add_argument("--use-lora", action="store_true", help="Enable LoRA fine-tuning")
+    parser.add_argument("--add-special-tokens", action="store_true", help="Add think tags as tokenizer special tokens")
+    args = parser.parse_args()
+
+    model_id = args.model_id
+    output_dir = args.output_dir
+    dataset_id = args.dataset_id
+    number_samples_test = args.number_samples_test
+    MODEL_TYPE = args.model_type
+    LEARNING_RATE = args.learning_rate
+    BATCH_SIZE = args.batch_size
+    ACCU_STEPS = args.accu_steps
+    EPOCHS = args.epochs
+    USE_THINK_TAGS = not args.disable_think_tags
+    FREEZE_VISION = not args.disable_freeze_vision
+    CUSTOM_COLLATE_FN = not args.disable_custom_collate
+    USE_LORA = args.use_lora
+    ADD_SPECIAL_TOKENS = args.add_special_tokens
+
+    wandb.init(
+        project="compimg-train",
+        name=output_dir.split("/")[-1],
+        config={"model": output_dir.split("/")[-1]},
+    )
 
     dataset = load_dataset(path=dataset_id)
     train_dataset = dataset["train"]

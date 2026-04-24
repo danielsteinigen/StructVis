@@ -1,10 +1,13 @@
+import argparse
 import json
 import random
 from collections import Counter, defaultdict
 from itertools import zip_longest
 
 from datasets import concatenate_datasets, load_dataset
-from src.prompt_templates.templates_refinement import (
+
+from structvis.filtering.mappings import get_map_key, map_domain, question_templates
+from structvis.prompt_templates.templates_refinement import (
     ASSISTANT_ASSOCIATION,
     ASSISTANT_ASSOCIATION_NONE,
     ASSISTANT_CODE,
@@ -20,8 +23,7 @@ from src.prompt_templates.templates_refinement import (
     USER_CONSISTENCY_SOLUTION,
     USER_DESCRIPTION,
 )
-from src.structvis_dataset.mappings import get_map_key, map_domain, question_templates
-from src.util import load_json, save_json
+from structvis.util import load_json, save_json
 
 random.seed(42)
 save_filepath = f"/data/dataset_v10/dataset_assembled_new"
@@ -341,18 +343,28 @@ def select_consistency_question(sample):
     }
 
 
-if __name__ == "__main__":
-    categories = load_json(filename="data/categories_all.json")
+def main():
+    global save_filepath
 
-    ds_qa_prob = load_dataset("json", data_files=f"{save_filepath}/dataset_qa_problem.jsonl", split="train")
-    ds_ps_desc = load_dataset("json", data_files=f"{save_filepath}/dataset_ps_description.jsonl", split="train")
-    ds_ps_capt = load_dataset("json", data_files=f"{save_filepath}/dataset_ps_caption_result_post.jsonl", split="train")
-    ds_ass_per = load_dataset("json", data_files=f"{save_filepath}/dataset_association_persona.jsonl", split="train")
-    ds_ass_cap = load_dataset("json", data_files=f"{save_filepath}/dataset_association_caption_result_post.jsonl", split="train")
-    ds_consist = load_dataset("json", data_files=f"{save_filepath}/dataset_consistency.jsonl", split="train")
-    ds_llm_gen = load_dataset("json", data_files=f"{save_filepath}/dataset_llm_qa_result_post.jsonl", split="train")
-    ds_structu = load_dataset("json", data_files=f"{save_filepath}/dataset_structural.jsonl", split="train")
-    ds_transla = load_dataset("json", data_files=f"{save_filepath}/dataset_code_translate.jsonl", split="train")
+    parser = argparse.ArgumentParser(description="Assemble the final StructVis training dataset.")
+    parser.add_argument("--input-dir", required=True, help="Directory containing the intermediate refinement datasets")
+    parser.add_argument("--output-dir", required=True, help="Directory where the assembled dataset is written")
+    parser.add_argument("--categories", default="diagram_categories.json", help="Path to category definitions JSON")
+    args = parser.parse_args()
+
+    input_dir = args.input_dir
+    save_filepath = args.output_dir
+    categories = load_json(filename=args.categories)
+
+    ds_qa_prob = load_dataset("json", data_files=f"{input_dir}/dataset_qa_problem.jsonl", split="train")
+    ds_ps_desc = load_dataset("json", data_files=f"{input_dir}/dataset_ps_description.jsonl", split="train")
+    ds_ps_capt = load_dataset("json", data_files=f"{input_dir}/dataset_ps_caption_result_post.jsonl", split="train")
+    ds_ass_per = load_dataset("json", data_files=f"{input_dir}/dataset_association_persona.jsonl", split="train")
+    ds_ass_cap = load_dataset("json", data_files=f"{input_dir}/dataset_association_caption_result_post.jsonl", split="train")
+    ds_consist = load_dataset("json", data_files=f"{input_dir}/dataset_consistency.jsonl", split="train")
+    ds_llm_gen = load_dataset("json", data_files=f"{input_dir}/dataset_llm_qa_result_post.jsonl", split="train")
+    ds_structu = load_dataset("json", data_files=f"{input_dir}/dataset_structural.jsonl", split="train")
+    ds_transla = load_dataset("json", data_files=f"{input_dir}/dataset_code_translate.jsonl", split="train")
 
     print("Create QA problem questions ...")
     ds_qa_prob = ds_qa_prob.add_column("type", ["qa_problem"] * len(ds_qa_prob))
@@ -609,3 +621,7 @@ if __name__ == "__main__":
     ).shuffle(seed=42)
     final_ds_half_2.to_json(f"{save_filepath}/dataset_final_assembled_half_2.jsonl")
     save_stats_train(final_ds_half_2, f"{save_filepath}/statistics_final_half_2.json")
+
+
+if __name__ == "__main__":
+    main()

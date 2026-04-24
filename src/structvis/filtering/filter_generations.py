@@ -1,3 +1,4 @@
+import argparse
 import json
 import os
 import shutil
@@ -6,8 +7,9 @@ from collections import Counter, defaultdict
 import imagehash
 from datasets import Image, load_dataset
 from PIL import Image as PIL_Image
-from src.structvis_dataset.mappings import get_map_key, map_domain, selected_categories_less
-from src.util import classify_image_black_or_white, load_json, save_json
+
+from structvis.filtering.mappings import get_map_key, map_domain, selected_categories_less
+from structvis.util import classify_image_black_or_white, load_json, save_json
 
 # T10: Question-Answer(QA), T5: Problem-Solution(PS)
 save_filepath = "/data/data/structvis/datasets_test/test/dataset_ps_filtered_additional"
@@ -15,12 +17,14 @@ copy_images = False
 max_dups_code = 3
 max_dups_img = 3
 
-os.makedirs(f"{save_filepath}", exist_ok=True)
-if copy_images:
-    os.makedirs(f"{save_filepath}/img_additional/", exist_ok=True)
-    os.makedirs(f"{save_filepath}/img_ratio/", exist_ok=True)
-    os.makedirs(f"{save_filepath}/img_stats/", exist_ok=True)
-    os.makedirs(f"{save_filepath}/img_duplicates/", exist_ok=True)
+
+def ensure_output_dirs():
+    os.makedirs(save_filepath, exist_ok=True)
+    if copy_images:
+        os.makedirs(f"{save_filepath}/img_additional/", exist_ok=True)
+        os.makedirs(f"{save_filepath}/img_ratio/", exist_ok=True)
+        os.makedirs(f"{save_filepath}/img_stats/", exist_ok=True)
+        os.makedirs(f"{save_filepath}/img_duplicates/", exist_ok=True)
 
 
 def save_stats(ds, path):
@@ -144,10 +148,27 @@ def duplicate_filter(ds, log_path, img=False):
     return keep_idx, remove_idx
 
 
-if __name__ == "__main__":
-    categories = load_json(filename="data/categories_all.json")
+def main():
+    global save_filepath, copy_images, max_dups_code, max_dups_img
 
-    save_dirs = []
+    parser = argparse.ArgumentParser(description="Filter generated StructVis datasets.")
+    parser.add_argument("--input-dirs", nargs="+", required=True, help="Directories containing dataset.jsonl files")
+    parser.add_argument("--output-dir", required=True, help="Directory where filtered output is written")
+    parser.add_argument("--categories", default="diagram_categories.json", help="Path to category definitions JSON")
+    parser.add_argument("--copy-images", action="store_true", help="Copy rejected samples into inspection folders")
+    parser.add_argument("--max-dups-code", type=int, default=3, help="Maximum duplicate code samples to keep")
+    parser.add_argument("--max-dups-img", type=int, default=3, help="Maximum duplicate image samples to keep")
+    args = parser.parse_args()
+
+    save_filepath = args.output_dir
+    copy_images = args.copy_images
+    max_dups_code = args.max_dups_code
+    max_dups_img = args.max_dups_img
+    ensure_output_dirs()
+
+    categories = load_json(filename=args.categories)
+
+    save_dirs = args.input_dirs
 
     print("Convert statistics to string")
     for save_dir in save_dirs:
@@ -218,3 +239,7 @@ if __name__ == "__main__":
     ds.to_json(f"{save_filepath}/dataset.jsonl")
     ds_dup.to_json(f"{save_filepath}/dataset_dub.jsonl")
     ds_dup_img.to_json(f"{save_filepath}/dataset_dub_img.jsonl")
+
+
+if __name__ == "__main__":
+    main()

@@ -8,9 +8,10 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 from datasets import Dataset, load_dataset
-from src.data_generator.data_generator import DataGenerator
-from src.prompt_templates.templates_personas import PERSONA_LABEL_PROMPT, PERSONA_LABEL_SYSTEM
-from src.util import check_reasoning
+
+from structvis.data_generator.data_generator import DataGenerator
+from structvis.prompt_templates.templates_personas import PERSONA_LABEL_PROMPT, PERSONA_LABEL_SYSTEM
+from structvis.util import check_reasoning
 
 
 def create_figure(inputs, cluster_summaries: Dict[int, str], output_path: str) -> None:

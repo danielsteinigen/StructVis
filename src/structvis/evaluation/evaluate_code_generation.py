@@ -1,11 +1,13 @@
+import argparse
 import csv
 import os
 from collections import defaultdict
 from statistics import mean
 
 import wandb
-from src.util import load_jsonl, load_text
 from tqdm import tqdm
+
+from structvis.util import load_jsonl, load_text
 
 languages_cnt_chars = ["logic_bool", "logic_symb", "newick", "fasta", "vienna", "smiles", "smarts", "smarts_react", "fen", "abc"]
 
@@ -39,9 +41,12 @@ def format_row(row):
     return [f"{cell:.4f}".replace(".", ",") if isinstance(cell, float) else cell for cell in row]
 
 
-if __name__ == "__main__":
+def main():
+    parser = argparse.ArgumentParser(description="Evaluate code-generation outputs grouped by FRL.")
+    parser.add_argument("--input-dirs", nargs="+", required=True, help="Directories containing evaluation dataset.jsonl files")
+    args = parser.parse_args()
 
-    save_dirs = []
+    save_dirs = args.input_dirs
 
     for filepath in save_dirs:
         dataset = load_jsonl(f"{filepath}/dataset.jsonl")
@@ -277,3 +282,7 @@ if __name__ == "__main__":
         print("CSV files written: mean_stats_per_approach.csv, mean_stats_by_group.csv, image_counts_by_language.csv")
 
         wandb.finish()
+
+
+if __name__ == "__main__":
+    main()

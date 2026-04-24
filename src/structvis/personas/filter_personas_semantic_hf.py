@@ -8,8 +8,9 @@ import faiss
 import numpy as np
 from datasets import load_dataset
 from sentence_transformers import SentenceTransformer
-from src.util import load_json, load_jsonl, save_json, save_jsonl
 from tqdm import tqdm
+
+from structvis.util import load_json, load_jsonl, save_json, save_jsonl
 
 random.seed(42)
 

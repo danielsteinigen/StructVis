@@ -1,9 +1,10 @@
 import argparse
 
 from datasets import load_dataset
-from src.data_generator.data_generator import DataGenerator
-from src.prompt_templates.templates_personas import TEXT_TO_PERSONA_PROMPT, TEXT_TO_PERSONA_SYSTEM
-from src.util import check_reasoning
+
+from structvis.data_generator.data_generator import DataGenerator
+from structvis.prompt_templates.templates_personas import TEXT_TO_PERSONA_PROMPT, TEXT_TO_PERSONA_SYSTEM
+from structvis.util import check_reasoning
 
 
 class PersonaDataGenerator(DataGenerator):

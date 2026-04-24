@@ -2,9 +2,10 @@ import argparse
 import random
 
 from datasets import load_dataset
-from src.data_generator.data_generator import DataGenerator
-from src.prompt_templates.templates_generation import PROMPT_END2END_5, PROMPT_END2END_10, SYSTEM_END2END
-from src.util import check_reasoning, extract_part, load_json
+
+from structvis.data_generator.data_generator import DataGenerator
+from structvis.prompt_templates.templates_generation import PROMPT_END2END_5, PROMPT_END2END_10, SYSTEM_END2END
+from structvis.util import check_reasoning, extract_part, load_json
 
 random.seed(42)
 
@@ -138,6 +139,7 @@ class StructuredDataGenerator(DataGenerator):
 def main():
     parser = argparse.ArgumentParser(description="Run persona extraction with vLLM.")
     parser.add_argument("--config", required=True, help="Path to YAML config file")
+    parser.add_argument("--input", required=True, help="Path to the personas JSONL input file")
     parser.add_argument("--output", required=True, help="Path to output JSONL file")
     parser.add_argument("--max-samples", type=int, default=None, help="Max samples to process")
     parser.add_argument("--data-batch-size", type=int, default=1000, help="Batch size per LLM call")
@@ -150,7 +152,7 @@ def main():
     generator = StructuredDataGenerator(
         model_config=args.config,
         output_path=args.output,
-        input_path="data/personas_assemble_v4_all.jsonl",
+        input_path=args.input,
         max_samples=args.max_samples,
         data_batch_size=args.data_batch_size,
         start_index=args.start_index,

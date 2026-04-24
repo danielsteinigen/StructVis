@@ -1,9 +1,10 @@
 import argparse
 
 from datasets import load_dataset
-from src.data_generator.data_generator import DataGenerator
-from src.prompt_templates.templates_enrichment import PROMPT_SCORE_PS, PROMPT_SCORE_QA, SYSTEM_SCORE_PS, SYSTEM_SCORE_QA
-from src.util import check_reasoning, extract_part
+
+from structvis.data_generator.data_generator import DataGenerator
+from structvis.prompt_templates.templates_enrichment import PROMPT_SCORE_PS, PROMPT_SCORE_QA, SYSTEM_SCORE_PS, SYSTEM_SCORE_QA
+from structvis.util import check_reasoning, extract_part
 
 IS_QA = True
 
@@ -81,6 +82,7 @@ class ScoringDataGenerator(DataGenerator):
 def main():
     parser = argparse.ArgumentParser(description="Run persona extraction with vLLM.")
     parser.add_argument("--config", required=True, help="Path to YAML config file")
+    parser.add_argument("--input", required=True, help="Path to the dataset JSONL input file")
     parser.add_argument("--output", required=True, help="Path to output JSONL file")
     parser.add_argument("--max-samples", type=int, default=None, help="Max samples to process")
     parser.add_argument("--data-batch-size", type=int, default=1000, help="Batch size per LLM call")
@@ -91,7 +93,7 @@ def main():
     generator = ScoringDataGenerator(
         model_config=args.config,
         output_path=args.output,
-        input_path="/data/data/structvis/datasets_v10/filtered_test.jsonl",
+        input_path=args.input,
         max_samples=args.max_samples,
         data_batch_size=args.data_batch_size,
         start_index=args.start_index,

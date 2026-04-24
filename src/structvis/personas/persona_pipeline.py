@@ -7,10 +7,9 @@ Usage:
 
 import argparse
 
-from src.data_generator.persona_data_generator import PersonaDataGenerator
-from src.data_generator.persona_extend_data_generator import PersonaExtendDataGenerator
-from src.data_generator.persona_query_data_generator import PersonaQueryDataGenerator
-from src.personas.filter_personas_semantic import PersonaSearch
+from structvis.data_generator.persona_data_generator import PersonaDataGenerator
+from structvis.data_generator.persona_query_data_generator import PersonaQueryDataGenerator
+from structvis.personas.filter_personas_semantic_hf import PersonaSearch
 
 STEPS = [
     (
